@@ -48,6 +48,16 @@
     .links { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
     .links a { color: #e94560; font-size: 0.85rem; text-decoration: none; padding: 6px 14px; border: 1px solid #e94560; border-radius: 20px; transition: background 0.2s; }
     .links a:hover { background: #e94560; color: #fff; }
+    .console-section { margin-top: 28px; }
+    .console-section h3 { font-size: 0.85rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .console-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .console-table th { text-align: left; color: #888; font-weight: 600; padding: 6px 10px; border-bottom: 1px solid #2a2a4a; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    .console-table td { padding: 8px 10px; border-bottom: 1px solid #1a1a3a; vertical-align: middle; }
+    .console-table tr:last-child td { border-bottom: none; }
+    .console-table a { color: #e94560; text-decoration: none; }
+    .console-table a:hover { text-decoration: underline; }
+    .cred { font-family: monospace; background: #0a1628; padding: 2px 7px; border-radius: 4px; font-size: 0.82rem; color: #4caf50; }
+    .note { color: #888; font-size: 0.78rem; font-style: italic; }
   </style>
 </head>
 <body>
@@ -85,6 +95,69 @@
     <a href="http://localhost:3000/d/pizza-app" target="_blank">📊 Grafana Dashboard</a>
     <a href="http://localhost:9090" target="_blank">🔥 Prometheus</a>
     <a href="http://localhost:8191" target="_blank">⚙ Kong Admin</a>
+  </div>
+
+  <div class="console-section">
+    <h3>Admin Consoles &amp; Connection Info</h3>
+    <table class="console-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>URL / Host</th>
+          <th>Credentials</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>📊 Grafana</td>
+          <td><a href="http://localhost:3000" target="_blank">localhost:3000</a></td>
+          <td><span class="cred">admin</span> / <span class="cred">admin</span></td>
+          <td class="note">Docker container</td>
+        </tr>
+        <tr>
+          <td>🔥 Prometheus</td>
+          <td><a href="http://localhost:9090" target="_blank">localhost:9090</a></td>
+          <td class="note">No login required</td>
+          <td class="note">Docker container</td>
+        </tr>
+        <tr>
+          <td>⚙ Kong Gateway</td>
+          <td><a href="http://localhost:8190" target="_blank">localhost:8190</a> (proxy)</td>
+          <td class="note">No login required</td>
+          <td class="note">Docker container</td>
+        </tr>
+        <tr>
+          <td>⚙ Kong Admin API</td>
+          <td><a href="http://localhost:8191" target="_blank">localhost:8191</a></td>
+          <td class="note">No login required</td>
+          <td class="note">Docker container — REST API</td>
+        </tr>
+        <tr>
+          <td>🍃 MongoDB</td>
+          <td><span class="cred">localhost:27017</span></td>
+          <td class="note">No auth configured</td>
+          <td class="note">Portable binary, no web UI</td>
+        </tr>
+        <tr>
+          <td>🍃 MongoDB Compass</td>
+          <td colspan="2"><span class="cred">mongodb://localhost:27017</span></td>
+          <td class="note"><a href="https://www.mongodb.com/try/download/compass" target="_blank">Download Compass UI</a></td>
+        </tr>
+        <tr>
+          <td>🌱 Spring Boot ×10</td>
+          <td><span class="cred">localhost:8080</span> – <span class="cred">8089</span></td>
+          <td class="note">No login required</td>
+          <td class="note"><a href="http://localhost:8080/actuator/health" target="_blank">Health check</a></td>
+        </tr>
+        <tr>
+          <td>📈 Prometheus Metrics</td>
+          <td><a href="http://localhost:8080/actuator/prometheus" target="_blank">localhost:808x/actuator/prometheus</a></td>
+          <td class="note">No login required</td>
+          <td class="note">Raw scrape endpoint per instance</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
