@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pizza Service Load Tester</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; display: flex; justify-content: center; padding: 40px 20px; }
+    .card { background: #16213e; border-radius: 16px; padding: 40px; width: 100%; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    h1 { font-size: 1.8rem; margin-bottom: 6px; color: #e94560; }
+    .subtitle { color: #888; margin-bottom: 32px; font-size: 0.95rem; }
+    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    input[type=text], input[type=number] {
+      width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid #2a2a4a;
+      background: #0f3460; color: #fff; font-size: 1rem; margin-bottom: 20px; outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #e94560; }
+    .rps-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .rps-row input[type=number] { margin-bottom: 0; width: 120px; }
+    .rps-row input[type=range] { flex: 1; accent-color: #e94560; }
+    .rps-val { color: #e94560; font-weight: 700; font-size: 1.1rem; min-width: 40px; }
+    .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+    button {
+      flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 1rem;
+      font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #btnStart { background: #e94560; color: #fff; }
+    #btnStop  { background: #2a2a4a; color: #e94560; border: 2px solid #e94560; }
+    .stats { margin-top: 32px; background: #0f3460; border-radius: 12px; padding: 20px; }
+    .stats h2 { font-size: 1rem; color: #aaa; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .stat { text-align: center; }
+    .stat-val { font-size: 2rem; font-weight: 700; color: #e94560; }
+    .stat-lbl { font-size: 0.75rem; color: #888; text-transform: uppercase; margin-top: 4px; }
+    .status-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem;
+      font-weight: 700; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .status-badge.running { background: #1a4a1a; color: #4caf50; }
+    .status-badge.stopped { background: #3a1a1a; color: #e94560; }
+    .log { margin-top: 20px; background: #0a1628; border-radius: 8px; padding: 14px; max-height: 140px; overflow-y: auto; font-size: 0.82rem; font-family: monospace; color: #aaa; }
+    .log-entry { margin-bottom: 4px; }
+    .log-entry.err { color: #e94560; }
+    .links { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .links a { color: #e94560; font-size: 0.85rem; text-decoration: none; padding: 6px 14px; border: 1px solid #e94560; border-radius: 20px; transition: background 0.2s; }
+    .links a:hover { background: #e94560; color: #fff; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🍕 Pizza Service Load Tester</h1>
+  <p class="subtitle">Send configurable traffic to the pizza service via Kong gateway</p>
+
+  <label>Target URL</label>
+  <input type="text" id="targetUrl" value="http://localhost:8190/hello">
+
+  <label>Requests per Second (1–100)</label>
+  <div class="rps-row">
+    <input type="number" id="rpsInput" min="1" max="100" value="5">
+    <input type="range" id="rpsSlider" min="1" max="100" value="5">
+    <span class="rps-val" id="rpsVal">5</span>
+  </div>
+
+  <div class="btn-row">
+    <button id="btnStart">▶ Start</button>
+    <button id="btnStop" disabled>■ Stop</button>
+  </div>
+
+  <div class="stats">
+    <div id="statusBadge" class="status-badge stopped">Stopped</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-val" id="statSent">0</div><div class="stat-lbl">Requests Sent</div></div>
+      <div class="stat"><div class="stat-val" id="statRps">0</div><div class="stat-lbl">Current RPS</div></div>
+      <div class="stat"><div class="stat-val" id="statErrors">0</div><div class="stat-lbl">Errors</div></div>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <div class="links">
+    <a href="http://localhost:3000/d/pizza-app" target="_blank">📊 Grafana Dashboard</a>
+    <a href="http://localhost:9090" target="_blank">🔥 Prometheus</a>
+    <a href="http://localhost:8191" target="_blank">⚙ Kong Admin</a>
+  </div>
+</div>
+
+<script>
+  const rpsInput  = document.getElementById('rpsInput');
+  const rpsSlider = document.getElementById('rpsSlider');
+  const rpsVal    = document.getElementById('rpsVal');
+  const btnStart  = document.getElementById('btnStart');
+  const btnStop   = document.getElementById('btnStop');
+  const logEl     = document.getElementById('log');
+
+  rpsSlider.addEventListener('input', () => { rpsInput.value = rpsSlider.value; rpsVal.textContent = rpsSlider.value; });
+  rpsInput.addEventListener('input',  () => { rpsSlider.value = rpsInput.value; rpsVal.textContent = rpsInput.value; });
+
+  function addLog(msg, isErr = false) {
+    const d = document.createElement('div');
+    d.className = 'log-entry' + (isErr ? ' err' : '');
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.prepend(d);
+    if (logEl.children.length > 50) logEl.lastChild.remove();
+  }
+
+  btnStart.addEventListener('click', async () => {
+    const rps = parseInt(rpsInput.value);
+    const targetUrl = document.getElementById('targetUrl').value;
+    const res = await fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rps, targetUrl })
+    });
+    const data = await res.json();
+    addLog(`Started: ${data.rps} req/sec → ${data.targetUrl}`);
+    btnStart.disabled = true;
+    btnStop.disabled = false;
+  });
+
+  btnStop.addEventListener('click', async () => {
+    const res = await fetch('/api/stop', { method: 'POST' });
+    const data = await res.json();
+    addLog(`Stopped. Sent: ${data.sent}, Errors: ${data.errors}`);
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+  });
+
+  // Poll status every second
+  setInterval(async () => {
+    try {
+      const res = await fetch('/api/status');
+      const s = await res.json();
+      document.getElementById('statSent').textContent   = s.sent.toLocaleString();
+      document.getElementById('statRps').textContent    = s.running ? s.rps : 0;
+      document.getElementById('statErrors').textContent = s.errors;
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = s.running ? 'Running' : 'Stopped';
+      badge.className = 'status-badge ' + (s.running ? 'running' : 'stopped');
+    } catch(e) {}
+  }, 1000);
+</script>
+</body>
+</html>
